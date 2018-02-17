@@ -1,53 +1,6 @@
 import React, { Component } from 'react';
 import './Game.css';
-
-class Square extends Component {
-  render () {
-    const classN = this.props.isOpen ? "square open" : "square";
-    return (
-      <div
-        className={classN}
-        onClick={this.props.onClick}
-        >
-          {this.props.value}
-      </div>
-    )
-  }
-}
-
-class Board extends Component {
-
-  renderSquare(i,j,totalSquares) {
-    //console.log(this.props.squares);
-    return (
-      <Square
-        isOpen={this.props.boardIsOpen[i][j]}
-        value={this.props.boardValues[i][j]}
-        row={i}
-        col={j}
-        key={totalSquares}
-        onClick={() => this.props.onClick(i,j,totalSquares)}
-      />
-    )
-  }
-
-  render () {
-    var rowArray = [];
-    var colArray = [];
-    var totalSquares = 0;
-    for (var i = 0; i < this.props.rows; i++) {
-      colArray = [];
-      for (var j=0; j<this.props.cols; j++) {
-        totalSquares += 1;
-        colArray.push(this.renderSquare(i,j,totalSquares));
-      }
-      rowArray.push(<div key={i}>{colArray}</div>);
-    }
-    return (
-      <h3>Hello {rowArray}</h3>
-    );
-  }
-}
+import Board from './Board.js';
 
 
 class Game extends Component {
@@ -56,18 +9,16 @@ class Game extends Component {
 
     const s = this.createMultiArray(props.rows, props.cols);
 
-    const boardDataTemp = this.createMultiArray(props.rows, props.cols);
-    const boardData = this.createBoardData(boardDataTemp, props.mines);
-    console.log(boardData);
+    const boardIsMineTemp = this.createMultiArray(props.rows, props.cols);
+    const boardIsMine = this.createBoardData(boardIsMineTemp, props.mines);
+    var boardAdj = this.createMultiArray(props.rows, props.cols);
+    boardAdj = this.updateSurroundingMineCount(boardAdj,boardIsMine);
 
-    /*
-    open
-    flagged
-    */
     this.state = {
+      boardAdjacent: boardAdj,
       boardIsFlagged: this.createMultiArray(props.rows, props.cols, false),
       boardIsOpen: this.createMultiArray(props.rows, props.cols, false),
-      boardData: boardData,
+      boardIsMine: boardIsMine,
       boardValues: s,
       isPlaying: true,
       squares: s,
@@ -86,14 +37,13 @@ class Game extends Component {
     const cols = boardArray[0].length;
     var bd = boardArray.slice();
     for (var k=0;k<Number(mines);k++) {
-      var run = true;
       var row = this.randomIntFromInterval(0, rows);
       var col = this.randomIntFromInterval(0, cols);
-      while(bd[row][col] === '*') {
+      while(bd[row][col] === true) {
         row = this.randomIntFromInterval(0, rows);
         col = this.randomIntFromInterval(0, cols);
       }
-      bd[row][col] = '*';
+      bd[row][col] = true;
 
     }
     return bd;
@@ -103,11 +53,116 @@ class Game extends Component {
       return num;
   }
 
+  // get the indexes of surrounding squares
+  getSurroundingPos(r, c, board) {
+		var rAround;
+		var cAround;
+
+		if (r === 0) { // first row
+			if (c === 0) {
+				rAround = [0, 1, 1];
+				cAround = [1, 0, 1];
+			} else if (c === board[0].length-1) {
+				rAround = [0, 1, 1];
+				cAround = [-1, -1, 0];
+			} else {
+				rAround = [0, 1, 1, 1, 0];
+				cAround = [-1, -1, 0, 1, 1];
+			}
+		} else if (r === board.length-1) { // last row
+			if (c === 0) {
+				rAround = [-1, -1, 0];
+				cAround = [0, 1, 1];
+			} else if (c === board[0].length-1) {
+				rAround = [0, -1, -1];
+				cAround = [-1, -1, 0];
+			} else {
+				rAround = [0, -1, -1, -1, 0];
+				cAround = [-1, -1, 0, 1, 1];
+			}
+		} else { // the other rows
+			if (c === 0) {
+				rAround = [-1, -1, 0, 1, 1];
+				cAround = [0, 1, 1, 0, 1];
+			} else if (c === board[0].length-1) {
+				rAround = [-1, -1, 0, 1, 1];
+				cAround = [-1, 0, -1, -1, 0];
+			} else {
+				rAround = [-1, -1, -1, 0, 0, 1, 1, 1];
+				cAround = [-1, 0, 1, -1, 1, -1, 0, 1];
+			}
+		}
+
+		return [rAround, cAround];
+
+	}
+
+  // counts how many of the adjacent tiles that are mines
+  countAdjacentMines(r, c, rowPos, colPos, boardIsMine) {
+		var mineCount = 0;
+
+		for (var i = 0; i < rowPos.length; i++) {
+			if ( boardIsMine[r+rowPos[i]][c+colPos[i]] === true ) {
+				mineCount += 1;
+			}
+		}
+
+		return mineCount;
+	}
+  // updates the data of the squares to say how many adjacent mines there are
+  updateSurroundingMineCount(boardAdjacent, boardIsMine) {
+		var boardAdj = boardAdjacent.splice();
+
+		for (var r = 0; r < boardAdj.length; r++) {
+
+			for (var c = 0; c < boardAdj[0].length; c++) {
+
+				var surroundingPos = this.getSurroundingPos(r,c, boardIsMine);
+
+				var mineCount = this.countAdjacentMines(r, c, surroundingPos[0], surroundingPos[1], boardIsMine);
+
+        boardAdj[r][c] = mineCount;
+			}
+
+		}
+    return boardAdj;
+	}
+
+  openSurrounding(r, c) {
+		// gets clicked tile, if it's empty, open it
+		// checks surrounding tiles, if a surrounding tile is empty, check its surrounding
+
+		var surroundingPos = this.getSurroundingPos(r, c);
+		var rAround = surroundingPos[0];
+		var cAround = surroundingPos[1];
+
+		for (var i = 0; i < rAround.length; i++) {
+
+			var currentRow = r+rAround[i];
+			var currentCol = c+cAround[i];
+			var currentTile = this.state.boardData[currentRow][currentCol];
+
+			if (this.state.boardIsOpen[currentRow][currentCol] === false && this.state.boardIsFlagged[currentRow][currentCol] === false && this.state.boardData[currentRow][currentCol] !=='*') {
+
+        /*
+				if (currentTile.adjacentMines === 0) {
+					openTile(currentRow,currentCol);
+					openSurrounding(currentRow,currentCol);
+				} else {
+					openTile(currentRow,currentCol);
+				}*/
+
+			}
+
+		}
+	}
+
+
 
   // Handles the click of a square
   handleClick(row, col, t) {
     console.log("Hello, click. Row ", row, " col ", col, t);
-    const sq = this.state.boardValues.slice();
+    //const sq = this.state.boardValues.slice();
     const isOpen = this.state.boardIsOpen.slice();
     isOpen[row][col] = true;
     //sq[0][0] = '-';
