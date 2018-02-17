@@ -164,21 +164,27 @@ class Game extends Component {
     const isOpen = this.state.boardIsOpen.slice();
     const isMine = this.state.boardIsMine.slice();
     const adjacent = this.state.boardAdjacent.slice();
+    const values = this.state.boardValues.slice();
     if (isOpen[row][col] === false) {
 
       // if the opened tile is a mine
       if (isMine[row][col]) {
         // lose game
-        this.state.isPlaying = false;
+        this.setState({
+          isPlaying: false,
+        })
       } else {
         isOpen[row][col] = true;
-        this.setState({
-          boardIsOpen: isOpen,
-        })
+
         // if the opened square is 0
         if (adjacent[row][col] === 0) {
           this.openSurrounding(row, col);
+        } else {
+          values[row][col] = adjacent[row][col];
         }
+        this.setState({
+          boardIsOpen: isOpen,
+        })
 
       }
 
@@ -197,22 +203,39 @@ class Game extends Component {
     }
 
   }
+  handleRightClick(row, col) {
+    if (this.state.isPlaying) {
+      const isOpen = this.state.boardIsOpen.slice();
+      const isMine = this.state.boardIsMine.slice();
+      const isFlagged = this.state.boardIsFlagged.slice();
+      const adjacent = this.state.boardAdjacent.slice();
+      const values = this.state.boardValues.slice();
+      if (isOpen[row][col] === false) {
+
+      }
+    }
+  }
 
 
 
   render () {
     const rows = this.props.rows;
     const cols = this.props.cols;
+    const status = this.state.isPlaying ? '' : 'You lost!';
     return (
       <div className="game">
 
         <h1>This is a game</h1>
+
         <Board
           boardIsOpen={this.state.boardIsOpen}
           boardValues={this.state.boardValues}
           rows={rows}
           cols={cols}
-          onClick={(r,c,t) => this.handleClick(r,c,t)}/>
+          onClick={(r,c,t) => this.handleClick(r,c,t)}
+          onRightClick={(r,c) => this.handleRightClick(r,c)}
+          />
+        <h4>{status}</h4>
       </div>
     )
   }

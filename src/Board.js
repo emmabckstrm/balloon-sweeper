@@ -7,6 +7,7 @@ class Square extends Component {
       <div
         className={classN}
         onClick={this.props.onClick}
+        onContextMenu={this.props.onRightClick}
         >
           {this.props.value}
       </div>
@@ -26,6 +27,7 @@ class Board extends Component {
         col={j}
         key={totalSquares}
         onClick={() => this.props.onClick(i,j,totalSquares)}
+        onRightClick={() => this.props.onRightClick(i,j)}
       />
     )
   }
@@ -43,7 +45,7 @@ class Board extends Component {
       rowArray.push(<div key={i}>{colArray}</div>);
     }
     return (
-      <h3>Hello {rowArray}</h3>
+      <div>{rowArray}</div>
     );
   }
 }

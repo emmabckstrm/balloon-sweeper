@@ -1,11 +1,12 @@
 .game {
-  background: lightblue;
   padding: 15px;
+  text-align: center;
 }
 
 .square {
+  background-color: MediumTurquoise;
   display: inline-block;
-  border: 1px solid blue;
+  border: 1px solid #ccc;
   width: 30px;
   height: 30px;
   text-align: center;
@@ -14,5 +15,5 @@
   cursor: pointer;
 }
 .square.open {
-  background: royalblue;
+  background: PaleTurquoise;
 }
