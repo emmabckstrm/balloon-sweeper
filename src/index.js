@@ -8,7 +8,7 @@ import registerServiceWorker from './registerServiceWorker';
 
 ReactDOM.render(
   <Game
-    cols="4"
+    cols="5"
     rows="4"
   />,
   document.getElementById('root'));
