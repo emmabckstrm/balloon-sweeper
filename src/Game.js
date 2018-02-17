@@ -3,8 +3,14 @@ import './Game.css';
 
 class Square extends Component {
   render () {
+    const classN = this.props.isOpen ? "square open" : "square";
     return (
-      <div className="square" onClick={this.props.onClick}>{this.props.value}</div>
+      <div
+        className={classN}
+        onClick={this.props.onClick}
+        >
+          {this.props.value}
+      </div>
     )
   }
 }
@@ -15,6 +21,7 @@ class Board extends Component {
     //console.log(this.props.squares);
     return (
       <Square
+        isOpen={this.props.boardIsOpen[i][j]}
         value={this.props.boardValues[i][j]}
         row={i}
         col={j}
@@ -47,40 +54,66 @@ class Game extends Component {
   constructor(props) {
     super(props);
 
-    const s = this.createBoardArray(props.rows, props.cols);
+    const s = this.createMultiArray(props.rows, props.cols);
 
-    const boardInfo = this.createBoardArray(props.rows, props.cols);
-    boardInfo[0][1] = '*';
-    console.log(boardInfo);
+    const boardDataTemp = this.createMultiArray(props.rows, props.cols);
+    const boardData = this.createBoardData(boardDataTemp, props.mines);
+    console.log(boardData);
 
     /*
     open
     flagged
     */
     this.state = {
-      boardInfo: boardInfo,
+      boardIsFlagged: this.createMultiArray(props.rows, props.cols, false),
+      boardIsOpen: this.createMultiArray(props.rows, props.cols, false),
+      boardData: boardData,
       boardValues: s,
       isPlaying: true,
       squares: s,
     }
   }
-
-  createBoardArray(rows, cols) {
+  // Creates an array with specified data
+  createMultiArray(rows, cols, value=null) {
     const s = new Array(Number(rows));
     for (var i=0; i<rows; i++) {
-      s[i] = new Array(Number(cols)).fill(null);
+      s[i] = new Array(Number(cols)).fill(value);
     }
     return s;
   }
+  createBoardData(boardArray, mines) {
+    const rows = boardArray.length;
+    const cols = boardArray[0].length;
+    var bd = boardArray.slice();
+    for (var k=0;k<Number(mines);k++) {
+      var run = true;
+      var row = this.randomIntFromInterval(0, rows);
+      var col = this.randomIntFromInterval(0, cols);
+      while(bd[row][col] === '*') {
+        row = this.randomIntFromInterval(0, rows);
+        col = this.randomIntFromInterval(0, cols);
+      }
+      bd[row][col] = '*';
+
+    }
+    return bd;
+  }
+  randomIntFromInterval(min,max) {
+      var num = Math.floor(Math.random()*(max-min)+min);
+      return num;
+  }
+
 
   // Handles the click of a square
   handleClick(row, col, t) {
     console.log("Hello, click. Row ", row, " col ", col, t);
     const sq = this.state.boardValues.slice();
-    /*sq[0][0] = '-';
+    const isOpen = this.state.boardIsOpen.slice();
+    isOpen[row][col] = true;
+    //sq[0][0] = '-';
     this.setState({
-      boardValues: sq,
-    })*/
+      boardIsOpen: isOpen,
+    })
   }
 
 
@@ -93,6 +126,7 @@ class Game extends Component {
 
         <h1>This is a game</h1>
         <Board
+          boardIsOpen={this.state.boardIsOpen}
           boardValues={this.state.boardValues}
           rows={rows}
           cols={cols}

@@ -10,6 +10,7 @@ ReactDOM.render(
   <Game
     cols="5"
     rows="4"
+    mines="2"
   />,
   document.getElementById('root'));
 registerServiceWorker();
