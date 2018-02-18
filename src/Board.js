@@ -27,7 +27,7 @@ class Board extends Component {
         col={j}
         key={totalSquares}
         onClick={() => this.props.onClick(i,j,totalSquares)}
-        onRightClick={() => this.props.onRightClick(i,j)}
+        onRightClick={(e) => this.props.onRightClick(i,j,e)}
       />
     )
   }

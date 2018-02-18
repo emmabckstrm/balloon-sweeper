@@ -203,13 +203,16 @@ class Game extends Component {
     }
 
   }
-  handleRightClick(row, col) {
+  handleRightClick(row, col, e) {
+    // prevents the context menu
+    e.preventDefault();
     if (this.state.isPlaying) {
       const isOpen = this.state.boardIsOpen.slice();
       const isMine = this.state.boardIsMine.slice();
       const isFlagged = this.state.boardIsFlagged.slice();
       const adjacent = this.state.boardAdjacent.slice();
       const values = this.state.boardValues.slice();
+      console.log("right lcick");
       if (isOpen[row][col] === false) {
 
       }
@@ -233,7 +236,7 @@ class Game extends Component {
           rows={rows}
           cols={cols}
           onClick={(r,c,t) => this.handleClick(r,c,t)}
-          onRightClick={(r,c) => this.handleRightClick(r,c)}
+          onRightClick={(r,c,e) => this.handleRightClick(r,c,e)}
           />
         <h4>{status}</h4>
       </div>
