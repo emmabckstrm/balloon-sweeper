@@ -21,6 +21,7 @@ class Game extends Component {
       boardIsOpen: this.createMultiArray(props.rows, props.cols, false),
       boardIsMine: boardIsMine,
       boardValues: s,
+      flags: 0,
       isPlaying: true,
       openedSquares: 0,
       squares: s,
@@ -163,13 +164,10 @@ class Game extends Component {
 	}
 
   openSquare(row, col) {
-    console.log("heu", row, col);
     const isOpen = this.state.boardIsOpen.slice();
     const isMine = this.state.boardIsMine.slice();
     const adjacent = this.state.boardAdjacent.slice();
     const values = this.state.boardValues.slice();
-    let openedSquares2 = this.state.openedSquares;
-    const squaresToOpen = this.state.squaresToOpen;
     if (isOpen[row][col] === false) {
 
       // if the opened tile is a mine
@@ -181,7 +179,6 @@ class Game extends Component {
       } else {
         isOpen[row][col] = true;
 
-
         // if the opened square is 0
         if (adjacent[row][col] === 0) {
           values[row][col] = '';
@@ -189,30 +186,28 @@ class Game extends Component {
         } else {
           values[row][col] = adjacent[row][col];
         }
-        let test = openedSquares2;
-        test += 1;
-        console.log(test, "test", row, col);
-        this.setState({
+        // syntax for updating state when it's calculated based on prev state
+        this.setState((state) => ({
           boardIsOpen: isOpen,
           boardValues: values,
-          openedSquares: test,
-        })
-
+          openedSquares: state.openedSquares +1,
+        }));
       }
-
-
     }
   }
 
-
+  componentDidUpdate(prevProps, prevState) {
+    if (this.state.openedSquares === this.state.squaresToOpen) {
+      console.log("you won");
+    }
+  }
   // Handles the click of a square
   handleClick(row, col, t) {
     if (this.state.isPlaying) {
       this.openSquare(row, col);
-
-    }
-
+    };
   }
+  // handles a right click, flagging a square
   handleRightClick(row, col, e) {
     // prevents the context menu
     e.preventDefault();
@@ -220,23 +215,27 @@ class Game extends Component {
       const isOpen = this.state.boardIsOpen.slice();
       const isFlagged = this.state.boardIsFlagged.slice();
       const values = this.state.boardValues.slice();
-      console.log("right lcick");
       if (isOpen[row][col] === false) {
-        if (isFlagged[row][col] === false) {
+        if (isFlagged[row][col] === false && this.state.flags < this.props.mines) {
 
   				isFlagged[row][col] = true;
   				values[row][col] = 'F';
+          this.setState((state) => ({
+            flags: state.flags + 1,
+          }));
 
   			} else if (isFlagged[row][col] === true) {
 
   				isFlagged[row][col] = false;
   				values[row][col] = '';
-
+          this.setState((state) => ({
+            flags: state.flags -1,
+          }));
   			}
-        this.setState({
+        this.setState((state) => ({
           boardIsFlagged: isFlagged,
           boardValues: values,
-        })
+        }));
       }
     }
   }
@@ -246,12 +245,13 @@ class Game extends Component {
   render () {
     const rows = this.props.rows;
     const cols = this.props.cols;
+    const flags = this.state.flags;
     const status = this.state.isPlaying ? '' : 'You lost!';
     return (
       <div className="game">
 
         <h1>This is a game</h1>
-
+        <p>Flags: {flags}</p>
         <Board
           boardIsOpen={this.state.boardIsOpen}
           boardValues={this.state.boardValues}
