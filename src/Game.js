@@ -22,7 +22,9 @@ class Game extends Component {
       boardIsMine: boardIsMine,
       boardValues: s,
       isPlaying: true,
+      openedSquares: 0,
       squares: s,
+      squaresToOpen: (Number(props.rows) * Number(props.cols) - Number(props.mines)),
     }
   }
   // Creates an array with specified data
@@ -128,10 +130,9 @@ class Game extends Component {
 		}
     return boardAdj;
 	}
-
+  // gets clicked tile, if it's empty, open it
+  // checks surrounding tiles, if a surrounding tile is empty, check its surrounding
   openSurrounding(r, c) {
-		// gets clicked tile, if it's empty, open it
-		// checks surrounding tiles, if a surrounding tile is empty, check its surrounding
     const isOpen = this.state.boardIsOpen.slice();
     const isFlagged = this.state.boardIsFlagged.slice();
     const isMine = this.state.boardIsMine.slice();
@@ -146,7 +147,8 @@ class Game extends Component {
 			var currentRow = r+rAround[i];
 			var currentCol = c+cAround[i];
 
-			if (isOpen[currentRow][currentCol] === false && isFlagged[currentRow][currentCol] === false && isMine[currentRow][currentCol] != true) {
+      // the square is not opened, not flagged and not a mine, open it
+			if (isOpen[currentRow][currentCol] === false && isFlagged[currentRow][currentCol] === false && isMine[currentRow][currentCol] !== true) {
 
 				if (adjacent[currentRow][currentCol] === 0) {
 					this.openSquare(currentRow,currentCol);
@@ -161,10 +163,13 @@ class Game extends Component {
 	}
 
   openSquare(row, col) {
+    console.log("heu", row, col);
     const isOpen = this.state.boardIsOpen.slice();
     const isMine = this.state.boardIsMine.slice();
     const adjacent = this.state.boardAdjacent.slice();
     const values = this.state.boardValues.slice();
+    let openedSquares2 = this.state.openedSquares;
+    const squaresToOpen = this.state.squaresToOpen;
     if (isOpen[row][col] === false) {
 
       // if the opened tile is a mine
@@ -176,14 +181,21 @@ class Game extends Component {
       } else {
         isOpen[row][col] = true;
 
+
         // if the opened square is 0
         if (adjacent[row][col] === 0) {
+          values[row][col] = '';
           this.openSurrounding(row, col);
         } else {
           values[row][col] = adjacent[row][col];
         }
+        let test = openedSquares2;
+        test += 1;
+        console.log(test, "test", row, col);
         this.setState({
           boardIsOpen: isOpen,
+          boardValues: values,
+          openedSquares: test,
         })
 
       }
@@ -196,8 +208,6 @@ class Game extends Component {
   // Handles the click of a square
   handleClick(row, col, t) {
     if (this.state.isPlaying) {
-      console.log("Hello, click. Row ", row, " col ", col, t);
-      //const sq = this.state.boardValues.slice();
       this.openSquare(row, col);
 
     }
@@ -208,13 +218,25 @@ class Game extends Component {
     e.preventDefault();
     if (this.state.isPlaying) {
       const isOpen = this.state.boardIsOpen.slice();
-      const isMine = this.state.boardIsMine.slice();
       const isFlagged = this.state.boardIsFlagged.slice();
-      const adjacent = this.state.boardAdjacent.slice();
       const values = this.state.boardValues.slice();
       console.log("right lcick");
       if (isOpen[row][col] === false) {
+        if (isFlagged[row][col] === false) {
 
+  				isFlagged[row][col] = true;
+  				values[row][col] = 'F';
+
+  			} else if (isFlagged[row][col] === true) {
+
+  				isFlagged[row][col] = false;
+  				values[row][col] = '';
+
+  			}
+        this.setState({
+          boardIsFlagged: isFlagged,
+          boardValues: values,
+        })
       }
     }
   }
