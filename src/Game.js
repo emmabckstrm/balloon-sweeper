@@ -17,6 +17,7 @@ class Game extends Component {
 
     this.state = {
       boardAdjacent: boardAdj,
+      boardData: boardAdj,
       boardIsFlagged: this.createMultiArray(props.rows, props.cols, false),
       boardIsOpen: this.createMultiArray(props.rows, props.cols, false),
       boardIsMine: boardIsMine,
@@ -63,7 +64,6 @@ class Game extends Component {
   getSurroundingPos(r, c, board) {
 		var rAround;
 		var cAround;
-
 		if (r === 0) { // first row
 			if (c === 0) {
 				rAround = [0, 1, 1];
@@ -122,12 +122,18 @@ class Game extends Component {
 		for (var r = 0; r < boardAdj.length; r++) {
 
 			for (var c = 0; c < boardAdj[0].length; c++) {
+        // if the current square contains a mine
+        if (boardIsMine[r][c]) {
+          boardAdj[r][c] = '*';
+        } else {
+          // if no mine, count surrounding mines
+          var surroundingPos = this.getSurroundingPos(r,c, boardIsMine);
+  				var mineCount = this.countAdjacentMines(r, c, surroundingPos[0], surroundingPos[1], boardIsMine);
+          if (mineCount>0) {
+              boardAdj[r][c] = mineCount;
+          }
+        }
 
-				var surroundingPos = this.getSurroundingPos(r,c, boardIsMine);
-
-				var mineCount = this.countAdjacentMines(r, c, surroundingPos[0], surroundingPos[1], boardIsMine);
-
-        boardAdj[r][c] = mineCount;
 			}
 
 		}
@@ -152,7 +158,7 @@ class Game extends Component {
       // the square is not opened, not flagged and not a mine, open it
 			if (isOpen[currentRow][currentCol] === false && isFlagged[currentRow][currentCol] === false && isMine[currentRow][currentCol] !== true) {
 
-				if (adjacent[currentRow][currentCol] === 0) {
+				if (adjacent[currentRow][currentCol] === 0 || adjacent[currentRow][currentCol] === null) {
 					this.openSquare(currentRow,currentCol);
 					this.openSurrounding(currentRow,currentCol);
 				} else {
@@ -174,10 +180,11 @@ class Game extends Component {
       if (isMine[row][col]) {
         // lose game
         this.loseGame();
+        this.openAllSquares();
       } else {
         isOpen[row][col] = true;
-        // if the opened square is 0, open surrounding squares
-        if (adjacent[row][col] === 0) {
+        // if the opened square is 0 or null, open surrounding squares
+        if (adjacent[row][col] === 0 || adjacent[row][col] === null) {
           values[row][col] = '';
           this.openSurrounding(row, col);
         } else {
@@ -199,10 +206,10 @@ class Game extends Component {
     const boardIsMine = this.createBoardData(boardIsMineTemp, this.props.mines);
     var boardAdj = this.createMultiArray(this.props.rows, this.props.cols);
     boardAdj = this.updateSurroundingMineCount(boardAdj,boardIsMine);
-    console.log(boardAdj);
 
     this.setState({
       boardAdjacent: boardAdj,
+      boardData: boardAdj,
       boardIsFlagged: this.createMultiArray(this.props.rows, this.props.cols, false),
       boardIsOpen: this.createMultiArray(this.props.rows, this.props.cols, false),
       boardIsMine: boardIsMine,
@@ -226,6 +233,19 @@ class Game extends Component {
     this.setState({
       isPlaying: false,
       loss: true,
+    })
+  }
+  openAllSquares() {
+    const isOpenOriginal = this.state.boardIsOpen.slice();
+    const adjacent = this.state.boardAdjacent.slice();
+    let isOpen = [];
+    for (var i=0; i<isOpenOriginal.length; i++) {
+      let isOpenArray = isOpenOriginal[i].map(x => true);
+      isOpen.push(isOpenArray);
+    }
+    this.setState({
+      boardIsOpen: isOpen,
+      boardValues: adjacent,
     })
   }
   // on component update
