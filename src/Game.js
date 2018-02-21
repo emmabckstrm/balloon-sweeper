@@ -23,9 +23,11 @@ class Game extends Component {
       boardValues: s,
       flags: 0,
       isPlaying: true,
+      loss: false,
       openedSquares: 0,
       squares: s,
       squaresToOpen: (Number(props.rows) * Number(props.cols) - Number(props.mines)),
+      win: false,
     }
   }
   // Creates an array with specified data
@@ -143,7 +145,6 @@ class Game extends Component {
 		var rAround = surroundingPos[0];
 		var cAround = surroundingPos[1];
 
-
 		for (var i = 0; i < rAround.length; i++) {
 			var currentRow = r+rAround[i];
 			var currentCol = c+cAround[i];
@@ -169,17 +170,13 @@ class Game extends Component {
     const adjacent = this.state.boardAdjacent.slice();
     const values = this.state.boardValues.slice();
     if (isOpen[row][col] === false) {
-
       // if the opened tile is a mine
       if (isMine[row][col]) {
         // lose game
-        this.setState({
-          isPlaying: false,
-        })
+        this.loseGame();
       } else {
         isOpen[row][col] = true;
-
-        // if the opened square is 0
+        // if the opened square is 0, open surrounding squares
         if (adjacent[row][col] === 0) {
           values[row][col] = '';
           this.openSurrounding(row, col);
@@ -195,10 +192,50 @@ class Game extends Component {
       }
     }
   }
+  resetGame() {
+    const s = this.createMultiArray(this.props.rows, this.props.cols);
 
+    const boardIsMineTemp = this.createMultiArray(this.props.rows, this.props.cols);
+    const boardIsMine = this.createBoardData(boardIsMineTemp, this.props.mines);
+    var boardAdj = this.createMultiArray(this.props.rows, this.props.cols);
+    boardAdj = this.updateSurroundingMineCount(boardAdj,boardIsMine);
+    console.log(boardAdj);
+
+    this.setState({
+      boardAdjacent: boardAdj,
+      boardIsFlagged: this.createMultiArray(this.props.rows, this.props.cols, false),
+      boardIsOpen: this.createMultiArray(this.props.rows, this.props.cols, false),
+      boardIsMine: boardIsMine,
+      boardValues: s,
+      flags: 0,
+      isPlaying: true,
+      loss: false,
+      openedSquares: 0,
+      squares: s,
+      squaresToOpen: (Number(this.props.rows) * Number(this.props.cols) - Number(this.props.mines)),
+      win: false,
+    })
+  }
+  winGame() {
+    this.setState({
+      isPlaying: false,
+      win: true,
+    })
+  }
+  loseGame() {
+    this.setState({
+      isPlaying: false,
+      loss: true,
+    })
+  }
+  // on component update
+  // checks if the number of oopened squares is equal to squares to open
   componentDidUpdate(prevProps, prevState) {
-    if (this.state.openedSquares === this.state.squaresToOpen) {
-      console.log("you won");
+    // only changes the state if the game is playing
+    if (this.state.isPlaying) {
+      if (this.state.openedSquares === this.state.squaresToOpen) {
+        this.winGame();
+      }
     }
   }
   // Handles the click of a square
@@ -246,7 +283,16 @@ class Game extends Component {
     const rows = this.props.rows;
     const cols = this.props.cols;
     const flags = this.state.flags;
-    const status = this.state.isPlaying ? '' : 'You lost!';
+    let status = "";//!this.state.isPlaying && !this.state.loss ? '' : 'You lost!';
+    //status = !this.state.isPlaying && this.state.win ? '' : 'You won!';
+    if (!this.state.isPlaying) {
+      if (this.state.loss) {
+        status = "You lost!";
+      }
+      else if (this.state.win) {
+        status = "You won!";
+      }
+    }
     return (
       <div className="game">
 
@@ -261,6 +307,7 @@ class Game extends Component {
           onRightClick={(r,c,e) => this.handleRightClick(r,c,e)}
           />
         <h4>{status}</h4>
+        <button onClick={() => this.resetGame()} className="btn">New game</button>
       </div>
     )
   }
