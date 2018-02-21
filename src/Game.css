@@ -17,3 +17,6 @@
 .square.open {
   background: PaleTurquoise;
 }
+.square.open.mine {
+  background: CadetBlue;
+}

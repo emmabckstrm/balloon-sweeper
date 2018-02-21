@@ -319,6 +319,7 @@ class Game extends Component {
         <h1>This is a game</h1>
         <p>Flags: {flags}</p>
         <Board
+          boardIsMine={this.state.boardIsMine}
           boardIsOpen={this.state.boardIsOpen}
           boardValues={this.state.boardValues}
           rows={rows}

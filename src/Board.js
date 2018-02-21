@@ -2,7 +2,12 @@ import React, { Component } from 'react';
 
 class Square extends Component {
   render () {
-    const classN = this.props.isOpen ? "square open" : "square";
+    // set different kinds of open classes, open bomb, etc
+    let classN = "square";
+    if (this.props.isOpen) {
+      classN += " open";
+      classN += this.props.isMine ? " mine" : "";
+    }
     return (
       <div
         className={classN}
@@ -21,6 +26,7 @@ class Board extends Component {
     //console.log(this.props.squares);
     return (
       <Square
+        isMine={this.props.boardIsMine[i][j]}
         isOpen={this.props.boardIsOpen[i][j]}
         value={this.props.boardValues[i][j]}
         row={i}
